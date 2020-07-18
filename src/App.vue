@@ -4,7 +4,7 @@
     <HelloWorld msg="Welcome to Your Vue.js App"/> -->
     <header class="header">
       <a href="/" class="header__logo">Мои счета</a>
-      <button type="button" class="btn btn-add" data-toggle="modal" data-target="#exampleModal"><span class="btn-text">Добавить</span><img src="./assets/icons/add.png" alt=""></button>
+      <button type="button" class="btn btn-add" @click="createAccount"><span class="btn-text">Добавить</span><img src="./assets/icons/add.png" alt=""></button>
     </header>
 
     <div class="container-fluid">
@@ -12,144 +12,79 @@
         <div class="col-lg-5 col-12">
           <p class="p-3">Доступные счета</p>
           <ul class="list-group list-group-flush">
-            <li class="list-group-item">
+            <li class="list-group-item" v-for="account in accounts" :key="account.id">
+              <div class="account-header" @click="showInfo(account)">
+                <h5 class="m-0">Счет {{account.id}}</h5>
+                <span>{{account.balance}}</span>
+              </div>
+              <div class="btn-group">
+                <button class="btn" type="button" @click="upAccountModal(account)"><img src="./assets/icons/add.png" alt="" title="Пополнить счет"></button>
+                <button class="btn" type="button" @click="purchaseAccountModal(account)"><img src="./assets/icons/checked.png" alt="" title="Потратить средства"></button>
+                <button class="btn" type="button" data-toggle="modal" data-target="#exampleModal3"><img src="./assets/icons/delete.png" alt="" title="Удалить счет" @click="deleteAccount(account)"></button>
+              </div>
+            </li>
+            <!-- <li class="list-group-item">
               <div class="account-header" @click="showInfo(1)">
                 <h5 class="m-0">Счет 1</h5>
                 <span>5 000 000</span>
               </div>
               <div class="btn-group">
-                <!-- <button class="btn" type="button" @click="upAccountModal(2)"><img src="./assets/icons/add.png" alt="" title="Пополнить счет"></button> -->
                 <button class="btn" type="button" @click="upAccountModal"><img src="./assets/icons/add.png" alt="" title="Пополнить счет"></button>
                 <button class="btn" type="button" @click="purchaseAccountModal"><img src="./assets/icons/checked.png" alt="" title="Потратить средства"></button>
                 <button class="btn" type="button" data-toggle="modal" data-target="#exampleModal3"><img src="./assets/icons/delete.png" alt="" title="Удалить счет"></button>
               </div>
-            </li>
-            <li class="list-group-item">
-              <div class="account-header" @click="showInfo(2)">
-                <h5 class="m-0">Счет 2</h5>
-                <span>5 000 000</span>
-              </div>
-              <div class="btn-group">
-                <button class="btn" type="button" data-toggle="modal" data-target="#exampleModal"><img src="./assets/icons/add.png" alt="" title="Пополнить счет"></button>
-                <button class="btn" type="button" data-toggle="modal" data-target="#exampleModal2"><img src="./assets/icons/checked.png" alt="" title="Потратить средства"></button>
-                <button class="btn" type="button" data-toggle="modal" data-target="#exampleModal3"><img src="./assets/icons/delete.png" alt="" title="Удалить счет"></button>
-              </div>
-            </li>
-            <li class="list-group-item">
-              <div class="account-header" @click="showInfo(3)">
-                <h5 class="m-0">Счет 3</h5>
-                <span>5 000 000</span>
-              </div>
-              <div class="btn-group">
-                <button class="btn" type="button" data-toggle="modal" data-target="#exampleModal"><img src="./assets/icons/add.png" alt="" title="Пополнить счет"></button>
-                <button class="btn" type="button" data-toggle="modal" data-target="#exampleModal2"><img src="./assets/icons/checked.png" alt="" title="Потратить средства"></button>
-                <button class="btn" type="button" data-toggle="modal" data-target="#exampleModal3"><img src="./assets/icons/delete.png" alt="" title="Удалить счет"></button>
-              </div>
-            </li>
-            <li class="list-group-item">
-              <div class="account-header" @click="showInfo(4)">
-                <h5 class="m-0">Счет 4</h5>
-                <span>5 000 000</span>
-              </div>
-              <div class="btn-group">
-                <button class="btn" type="button" data-toggle="modal" data-target="#exampleModal"><img src="./assets/icons/add.png" alt="" title="Пополнить счет"></button>
-                <button class="btn" type="button" data-toggle="modal" data-target="#exampleModal2"><img src="./assets/icons/checked.png" alt="" title="Потратить средства"></button>
-                <button class="btn" type="button" data-toggle="modal" data-target="#exampleModal3"><img src="./assets/icons/delete.png" alt="" title="Удалить счет"></button>
-              </div>
-            </li>
+            </li> -->
           </ul>
         </div>
         
-        <div class="col-lg-7 col-12">
-          <p class="p-3">Информация о счете</p>
-          <ul class="list-group list-group-flush" v-if="indexOfAccount==1">
-            <li class="list-group-item alert-success">
+        <div class="col-lg-7 col-12" v-if="activeAccount">
+          <p class="p-3">{{activeAccount ? 'Информация о счете № ' + activeAccount.id : ''}}</p>
+          <!-- <ul class="list-group list-group-flush">
+            <li class="list-group-item alert-success" v-for="payUp in currentInfoPayUp" :key="payUp.id">
               <div class="account-header">
                 <span>Пополнение</span>
-                <span>Сумма</span>
+                <span>{{payUp.date | datefilter}}</span>
+                <span>{{payUp.amount}}</span>
               </div>
             </li>
-            <li class="list-group-item alert-danger">
+            <li class="list-group-item alert-danger" v-for="transaction in currentInfoTansactions" :key="transaction.id">
               <div class="account-header">
                 <span>Списание</span>
                 <div>
-                  <span>Товар</span>
-                  <span>Сумма</span>
+                  <span>{{transaction.date | datefilter}}</span>
+                  <span>{{transaction.merchant}}</span>
+                  <span>{{transaction.amount}}</span>
                 </div>
               </div>
             </li>
-          </ul>
-          <ul class="list-group list-group-flush" v-if="indexOfAccount==2">
-            <li class="list-group-item alert-success">
+          </ul> -->
+          <ul class="list-group list-group-flush list-group-info">
+            <li class="list-group-item">
               <div class="account-header">
-                <span>Пополнение</span>
+                <span>Тип операции</span>
+                <span>Дата</span>
+                <span>Наименование</span>
                 <span>Сумма</span>
               </div>
             </li>
-            <li class="list-group-item alert-danger">
+            <li class="list-group-item" :class="!transaction.merchant ? 'alert-success' : 'alert-danger'" v-for="transaction in allTransactions" :key="transaction.id">
+              <div class="account-header">
+                <span>{{!transaction.merchant ? 'Пополнение' : 'Списание'}}</span>
+                <span>{{transaction.date | datefilter}}</span>
+                <span>{{transaction.merchant}}</span>
+                <span>{{transaction.amount}}</span>
+              </div>
+            </li>
+            <!-- <li class="list-group-item alert-danger" v-for="transaction in currentInfoTansactions" :key="transaction.id">
               <div class="account-header">
                 <span>Списание</span>
                 <div>
-                  <span>Товар</span>
-                  <span>Сумма</span>
+                  <span>{{transaction.date | datefilter}}</span>
+                  <span>{{transaction.merchant}}</span>
+                  <span>{{transaction.amount}}</span>
                 </div>
               </div>
-            </li>
-            <li class="list-group-item alert-success">
-              <div class="account-header">
-                <span>Пополнение</span>
-                <span>Сумма</span>
-              </div>
-            </li>
-          </ul>
-          <ul class="list-group list-group-flush" v-if="indexOfAccount==3">
-            <li class="list-group-item alert-success">
-              <div class="account-header">
-                <span>Пополнение</span>
-                <span>Сумма</span>
-              </div>
-            </li>
-            <li class="list-group-item alert-danger">
-              <div class="account-header">
-                <span>Списание</span>
-                <div>
-                  <span>Товар</span>
-                  <span>Сумма</span>
-                </div>
-              </div>
-            </li>
-            <li class="list-group-item alert-success">
-              <div class="account-header">
-                <span>Пополнение</span>
-                <span>Сумма</span>
-              </div>
-            </li>
-            <li class="list-group-item alert-danger">
-              <div class="account-header">
-                <span>Списание</span>
-                <div>
-                  <span>Товар</span>
-                  <span>Сумма</span>
-                </div>
-              </div>
-            </li>
-          </ul>
-          <ul class="list-group list-group-flush" v-if="indexOfAccount==4">
-            <li class="list-group-item alert-success">
-              <div class="account-header">
-                <span>Пополнение</span>
-                <span>Сумма</span>
-              </div>
-            </li>
-            <li class="list-group-item alert-danger">
-              <div class="account-header">
-                <span>Списание</span>
-                <div>
-                  <span>Товар</span>
-                  <span>Сумма</span>
-                </div>
-              </div>
-            </li>
+            </li> -->
           </ul>
         </div>
       </div> 
@@ -237,17 +172,16 @@
         </div>
       </div>
     </div> -->
-    <up-account-modal v-if="showModalUp" @close="showModalUp = false">
+    <up-account-modal v-if="showModalUp" :account="activeAccount" @close="showModalUp = false" @updateinfo="showInfo(activeAccount)">
     </up-account-modal>
-    <purchase-modal v-if="showModalPurchase" @close="showModalPurchase = false">
+    <purchase-modal v-if="showModalPurchase" :account="activeAccount" @close="showModalPurchase = false" @updateinfo="showInfo(activeAccount)">
     </purchase-modal>
 
   </div>
 </template>
 
 <script>
-// import HelloWorld from './components/HelloWorld.vue'
-// import axios from "axios"
+import axios from "axios"
 import UpAccountModal from './components/UpAccountModal'
 import PurchaseModal from './components/PurchaseModal'
 
@@ -261,23 +195,152 @@ export default {
     return {
       showModalUp: false,
       showModalPurchase: false,
-      indexOfAccount: null
+      activeAccount: null,
+      currentInfoPayUp: [],
+      currentInfoTansactions: [],
+      allTransactions: []
     }
   },
-  created() {
+  async created() {
+    try {
+      const res = await axios({
+        method: 'get',
+        url: 'http://localhost:8000/api/bank/account/',
+        headers: {
+          Authorization: 'Token ' + this.$store.state.token
+        },
+      });
+      console.log(res);
+      this.$store.commit('setAccounts', res.data);
+    } catch(e) {
+      console.error(e);
+    } // получаем список всех счетов пользователя и записываем в store
 
-    console.log('1321231321231')
+    try {
+      const res = await axios({
+        method: 'get',
+        url: 'http://localhost:8000/api/bank/action/',
+        headers: {
+          Authorization: 'Token ' + this.$store.state.token
+        },
+      });
+      console.log(res);
+      this.$store.commit('setAccountPayUp', res.data);
+    } catch(e) {
+      console.error(e);
+    } // получаем список всех пополнений пользователя и записываем в store
+
+    try {
+      const res = await axios({
+        method: 'get',
+        url: 'http://localhost:8000/api/bank/transaction/',
+        headers: {
+          Authorization: 'Token ' + this.$store.state.token
+        },
+      });
+      console.log(res);
+      this.$store.commit('setAccountTransactions', res.data);
+    } catch(e) {
+      console.error(e);
+    } // получаем список всех транзакций пользователя и записываем в store
+
+
+    console.log('this.activeAccount')
+    console.log(this.activeAccount)
+  },
+  computed: {
+    accounts() {
+        return this.$store.state.bankAccounts;
+    },
+    payInfo() {
+        return this.$store.state.accountPayUp;
+    },
+    transactionsInfo() {
+      return this.$store.state.accountTransactions;
+    }
+  },
+  filters: {
+    datefilter(value) {
+      let options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        timezone: 'UTC',
+        hour: 'numeric',
+        minute: 'numeric'
+      }
+      let date = new Date(value);
+      return date.toLocaleString("ru", options);
+    }
   },
   methods: {
-    upAccountModal() {
+    upAccountModal(account) {
+      this.activeAccount = account;
       this.showModalUp = true;
     },
-    purchaseAccountModal() {
+    purchaseAccountModal(account) {
+      this.activeAccount = account;
       this.showModalPurchase = true;
     },
-    showInfo(index) {
-      this.indexOfAccount = index;
-      console.log('admdsmdslak')
+    showInfo(account) {
+      // this.currentInfoPayUp = this.payInfo.filter(item => {
+      //   return item.account == id;
+      // });
+      // this.currentInfoPayUp.sort((a, b) => {
+      //   return (Date.parse(a.date )- Date.parse(b.date))
+      // });
+      // this.currentInfoTansactions = this.transactionsInfo.filter(item => {
+      //   return item.account == id;
+      // });
+      // this.currentInfoTansactions.sort((a, b) => {
+      //   return (Date.parse(a.date )- Date.parse(b.date))
+      // })
+
+      this.activeAccount = account;
+
+      let arr1 = [];
+      arr1 = this.payInfo.filter(item => {
+        return item.account == account.id;
+      });
+      let arr2 = [];
+      arr2 = this.transactionsInfo.filter(item => {
+        return item.account == account.id;
+      });
+      arr2.forEach(item => arr1.push(item));
+      this.allTransactions = arr1;
+
+      this.allTransactions.sort((a, b) => {
+        return (Date.parse(a.date )- Date.parse(b.date))
+      }) // фильтруем все транзакции по нужному счету и выводим с сортировкой по дате
+    },
+    async createAccount() {
+      try {
+        const res = await axios({
+          method: 'post',
+          url: 'http://localhost:8000/api/bank/account/',
+          headers: {
+            Authorization: 'Token ' + this.$store.state.token
+          },
+        });
+        this.$store.commit('addAccount', res.data);
+      } catch(e) {
+        console.error(e);
+      }
+    },
+    async deleteAccount(account) {
+      try {
+        await axios({
+          method: 'delete',
+          url: 'http://localhost:8000/api/bank/account/' + account.id + '/',
+          headers: {
+            Authorization: 'Token ' + this.$store.state.token
+          },
+          // body: {}
+        });
+        this.$store.commit('deleteAccount', account);
+      } catch(e) {
+        console.error(e);
+      }
     }
   }
 }
@@ -435,5 +498,44 @@ ul {
 .modal-leave-active .modal-container {
   -webkit-transform: scale(1.1);
   transform: scale(1.1);
+}
+.account-header span:nth-child(1) {
+  width: 25%;
+}
+.account-header span:nth-child(2) {
+  width: 30%;
+}
+.account-header span:nth-child(3) {
+  width: 30%;
+}
+.account-header span:nth-child(4) {
+  width: 15%;
+}
+@media (max-width:700px) {
+  .list-group-info {
+    font-size: 12px;
+  }
+}
+@media (max-width: 550px) {
+  .container-fluid {
+    padding: 0;
+  }
+}
+@media (max-width: 450px) {
+  .container-fluid {
+    padding: 0;
+  }
+  .account-header span:nth-child(1) {
+    display: none;
+  }
+  .account-header span:nth-child(2) {
+    width: 40%;
+  }
+  .account-header span:nth-child(3) {
+    width: 40%;
+  }
+  .account-header span:nth-child(4) {
+    width: 20%;
+  }
 }
 </style>

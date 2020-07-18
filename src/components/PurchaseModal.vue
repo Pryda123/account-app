@@ -14,21 +14,22 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text" id="inputGroup-sizing-default">Название товара</span>
                             </div>
-                            <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default">
+                            <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" v-model="merchant">
                         </div>
                         <div class="input-group mb-3">
                             <div class="input-group-prepend">
                                 <span class="input-group-text" id="inputGroup-sizing-default">Сумма</span>
                             </div>
-                            <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default">
+                            <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-default" v-model="amount">
                             <div class="input-group-append">
                                 <span class="input-group-text">руб.</span>
                             </div>
                         </div>
+                        <p v-if="warningMessage" class="alert alert-danger" role="alert">Недостаточно средств</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" @click="$emit('close')">Отменить</button>
-                        <button type="button" class="btn btn-primary">Оплатить</button>
+                        <button type="button" class="btn btn-primary" @click="sendSuccess">Оплатить</button>
                     </div>
                 </div>
             </div>
@@ -37,19 +38,61 @@
 </template>
 
 <script>
+import axios from "axios"
+
 export default {
     name: 'PurchaseModal',
+    props: ['account'],
     data() {
         return {
-            amount: null
+            merchant: null,
+            amount: null,
+            warningMessage: false
         }
     },
-    created() {
-        
-    },
     methods: {
-        sendSuccess() {
-            this.$emit('close')
+        async sendSuccess() {
+            try {
+                await axios({
+                    method: 'post',
+                    url: 'http://localhost:8000/api/bank/transaction/',
+                    headers: {
+                        Authorization: 'Token ' + this.$store.state.token
+                    },
+                    data: {
+                        account: this.account.id,
+                        merchant: this.merchant,
+                        amount: this.amount
+                    }
+                });
+                
+                let balance = String((+this.account.balance - +this.amount).toFixed(2));
+                let obj = {
+                    id: this.account.id,
+                    balance: balance
+                }
+                this.$store.commit('upBalance', obj);
+
+                try {
+                    const res = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8000/api/bank/transaction/',
+                        headers: {
+                        Authorization: 'Token ' + this.$store.state.token
+                        },
+                    });
+                    console.log(res);
+                    this.$store.commit('setAccountTransactions', res.data);
+                    this.$emit('updateinfo');
+                } catch(e) {
+                    console.error(e);
+                } // получаем список всех транзакций пользователя и записываем в store
+
+                this.$emit('close')
+            } catch(e) {
+                this.warningMessage = true;
+                console.error(e)
+            }
         }
     }
 }

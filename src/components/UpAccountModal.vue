@@ -31,8 +31,11 @@
 </template>
 
 <script>
+import axios from "axios"
+
 export default {
     name: 'UpAccountModal',
+    props: ['account'],
     data() {
         return {
             amount: null
@@ -42,8 +45,50 @@ export default {
         
     },
     methods: {
-        sendSuccess() {
-            this.$emit('close')
+        async sendSuccess() {
+            try {
+                await axios({
+                    method: 'post',
+                    url: 'http://localhost:8000/api/bank/action/',
+                    headers: {
+                        Authorization: 'Token ' + this.$store.state.token
+                    },
+                    data: {
+                        account: this.account.id,
+                        amount: this.amount
+                    }
+                });
+                
+                let balance = String((+this.account.balance + +this.amount).toFixed(2));
+                let obj = {
+                    id: this.account.id,
+                    balance: balance
+                }
+                this.$store.commit('upBalance', obj);
+
+                try {
+                    const res = await axios({
+                        method: 'get',
+                        url: 'http://localhost:8000/api/bank/action/',
+                        headers: {
+                        Authorization: 'Token ' + this.$store.state.token
+                        },
+                    });
+                    console.log(res);
+                    this.$store.commit('setAccountPayUp', res.data);
+                    this.$emit('updateinfo');
+                } catch(e) {
+                    console.error(e);
+                } // получаем список всех пополнений пользователя и записываем в store
+
+
+                console.log('this.account');
+                console.log(this.account);
+                this.$emit('close')
+            } catch(e) {
+                console.error(e)
+            }
+            
         }
     }
 }
