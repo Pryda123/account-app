@@ -38,7 +38,6 @@
 </template>
 
 <script>
-import axios from "axios"
 
 export default {
     name: 'PurchaseModal',
@@ -52,47 +51,29 @@ export default {
     },
     methods: {
         async sendSuccess() {
+            let payload = {...this.account};
+            payload.merchant = this.merchant;
+            payload.amount = this.amount;
+
             try {
-                await axios({
-                    method: 'post',
-                    url: 'http://localhost:8000/api/bank/transaction/',
-                    headers: {
-                        Authorization: 'Token ' + this.$store.state.token
-                    },
-                    data: {
-                        account: this.account.id,
-                        merchant: this.merchant,
-                        amount: this.amount
-                    }
-                });
-                
-                let balance = String((+this.account.balance - +this.amount).toFixed(2));
-                let obj = {
-                    id: this.account.id,
-                    balance: balance
-                }
-                this.$store.commit('upBalance', obj);
-
-                try {
-                    const res = await axios({
-                        method: 'get',
-                        url: 'http://localhost:8000/api/bank/transaction/',
-                        headers: {
-                        Authorization: 'Token ' + this.$store.state.token
-                        },
-                    });
-                    console.log(res);
-                    this.$store.commit('setAccountTransactions', res.data);
-                    this.$emit('updateinfo');
-                } catch(e) {
-                    console.error(e);
-                } // получаем список всех транзакций пользователя и записываем в store
-
-                this.$emit('close')
+                await this.$store.dispatch('transactionAccount', payload);
             } catch(e) {
                 this.warningMessage = true;
-                console.error(e)
+                console.error(e);
+                return;
             }
+            
+            let balance = String((+this.account.balance - +this.amount).toFixed(2));
+            let obj = {
+                id: this.account.id,
+                balance: balance
+            }
+            this.$store.commit('upBalance', obj);
+
+            await this.$store.dispatch('getAccountTransactions');
+
+            this.$emit('updateinfo');
+            this.$emit('close');
         }
     }
 }
