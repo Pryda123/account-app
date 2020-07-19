@@ -9,7 +9,7 @@ new Vue({
   render: h => h(App),
   created() {
     if(!this.$store.state.token) {
-      this.$store.dispatch('setToken');
+      this.$store.dispatch('setToken'); // вызов экшена регистрации
     }
   }
 }).$mount('#app')

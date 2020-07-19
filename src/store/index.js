@@ -11,7 +11,8 @@ export default new Vuex.Store({
     bankAccounts: [],
     token: null,
     accountPayUp: [],
-    accountTransactions: []
+    accountTransactions: [],
+    currentPage: 1
   },
   mutations: {
     setToken(state, token) {
@@ -42,6 +43,9 @@ export default new Vuex.Store({
           state.bankAccounts.splice(index, 1);
         }
       });
+    },
+    setCurrentPage(state, page) {
+      state.currentPage = page;
     }
   },
   actions: {
@@ -51,8 +55,8 @@ export default new Vuex.Store({
           method: 'post',
           url: 'http://localhost:8000/rest-auth/registration/',
           data: {
-            username: "Pryda111",
-            email: "Pryda111@ya.ru",
+            username: "Pryda2234",
+            email: "Pryda2234@ya.ru",
             password1: "asd!321z",
             password2: "asd!321z"
           }
@@ -61,7 +65,7 @@ export default new Vuex.Store({
       } catch(e) {
         console.error(e)
       }
-    },
+    }, // РЕГИСТРАЦИЯ (отправка логина, пароля и получение токена)
     async getAccounts(context) {
       try {
         const res = await axios({
@@ -159,8 +163,6 @@ export default new Vuex.Store({
           }
       });
     }
-  },
-  modules: {
   },
   plugins: [createPersistedState()]
 })

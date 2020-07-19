@@ -2,21 +2,36 @@
   <div id="app">
     <header class="header">
       <a href="/" class="header__logo">Мои счета</a>
-      <button type="button" class="btn btn-add" @click="createAccount"><span class="btn-text">Добавить</span><img src="./assets/icons/add.png" alt=""></button>
+      <button type="button" class="btn btn-add" @click="createAccount"><span class="btn-text" title="Добавить счет">Добавить</span><img src="./assets/icons/add.png" alt=""></button>
     </header>
 
     <div class="container-fluid">
       <div class="row">
         <div class="col-lg-5 col-12">
           <p class="p-3">Доступные счета</p>
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item" v-for="account in accounts" :key="account.id" @click="showInfo(account)">
+          <ul class="list-group list-group-flush mb-4">
+            <li class="list-group-item" v-for="account in paginationItems" :key="account.id" @click="showInfo(account)">
               <div class="account-header">
                 <h5 class="m-0">Счет {{account.id}}</h5>
                 <span>{{account.balance}}</span>
               </div>
             </li>
           </ul>
+          <nav class="ml-3" aria-label="Page navigation example" v-if="accounts.length > perPage">
+            <ul class="pagination">
+              <li class="page-item" @click="paginate(currentPage-1)">
+                <a class="page-link" href="#" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+              <li class="page-item" v-for="count in countPages" :key="count" @click="paginate(count)"><a class="page-link" :class="currentPage == count ? 'pagi-active' : ''" href="#">{{count}}</a></li>
+              <li class="page-item" @click="paginate(currentPage+1)">
+                <a class="page-link" href="#" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+            </ul>
+          </nav>
         </div>
         
         <div class="col-lg-7 col-12" v-if="activeAccount">
@@ -71,15 +86,18 @@ export default {
       showModalUp: false,
       showModalPurchase: false,
       activeAccount: null,
-      allTransactions: []
+      allTransactions: [],
+      perPage: 10
     }
   },
   created() {
-    this.$store.dispatch('getAccounts'); // получаем список всех счетов пользователя и записываем в store
+    if(this.$store.state.token) {
+      this.$store.dispatch('getAccounts'); // получаем список всех счетов пользователя и записываем в store
 
-    this.$store.dispatch('getAccountPayUp'); // получаем список всех пополнений пользователя и записываем в store
+      this.$store.dispatch('getAccountPayUp'); // получаем список всех пополнений пользователя и записываем в store
 
-    this.$store.dispatch('getAccountTransactions'); // получаем список всех транзакций пользователя и записываем в store
+      this.$store.dispatch('getAccountTransactions'); // получаем список всех транзакций пользователя и записываем в store
+    } 
   },
   computed: {
     accounts() {
@@ -90,6 +108,17 @@ export default {
     },
     transactionsInfo() {
       return this.$store.state.accountTransactions;
+    },
+    paginationItems() {
+      let accounts = [...this.accounts];
+
+      return accounts.splice((this.currentPage - 1) * this.perPage, this.perPage);
+    },
+    countPages() {
+      return Math.ceil(this.accounts.length / this.perPage);
+    },
+    currentPage() {
+      return this.$store.state.currentPage;
     }
   },
   filters: {
@@ -138,6 +167,16 @@ export default {
     },
     deleteAccount(account) {
       this.$store.dispatch('deleteAccount', account);
+      this.activeAccount = null;
+
+      if(this.currentPage > 1) {
+        this.$store.commit('setCurrentPage', this.currentPage - 1);
+      }
+    },
+    paginate(page) {
+      if(page == 0 || page > this.countPages) return; // для кнопок +/- в пагинации
+
+      this.$store.commit('setCurrentPage', page);
       this.activeAccount = null;
     }
   }
@@ -282,6 +321,11 @@ ul {
 }
 .account-header span:nth-child(4) {
   width: 15%;
+}
+.pagi-active {
+  z-index: 3;
+  outline: 0;
+  box-shadow: 0 0 0 .2rem rgba(0,123,255,.25);
 }
 @media (min-width:576px) {
   .modal-dialog {
